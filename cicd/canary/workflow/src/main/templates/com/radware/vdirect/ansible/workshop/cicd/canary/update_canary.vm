@@ -1,0 +1,32 @@
+
+#property('summary', 'Modifying real servers weight for production and Canary servers')
+
+#typedef('RealServer')
+	#param($id,'string')
+	#param($port,'int','defaultValue=80')
+	#param($address,'ip')
+	#param($name,'string')
+#end
+
+#param('canary', 'RealServer', 'in')
+#param('groupId', 'string', 'in', 'prompt=Group Id')
+#param('normalWeight', 'int', 'in', 'prompt=Production servers weight')
+#param('canaryWeight', 'int', 'in', 'prompt=Canary server weight')
+
+
+## Get group's servers
+#set($bean = $adc.newBean("SlbCurCfgEnhGroupRealServerEntry"))
+#set($servers = $adc.readAll($bean))
+
+## Update production servers' weight
+#log("Seting servers' weight for group $groupId")
+#foreach ($server in $servers)
+	#if ($server.realServGroupIndex == $groupId)
+		/c/slb/real $server.servIndex
+		#if ($server.servIndex == $canary.id)
+				weight  $canaryWeight
+		#else
+				weight  $normalWeight
+		#end
+	#end
+#end

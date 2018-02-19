@@ -1,0 +1,5 @@
+vdirect_ip: 10.205.124.67
+vdirect_user: vDirect
+vdirect_password: radware
+vdirect_validate_certs: no
+

@@ -1,0 +1,6 @@
+device: srv_e1ae41b7-d421-4f19-8bbc-8c719ae75036-adc-1
+group: ca31ac50bbad475290c52c477f96098c
+canary_server_id: canary
+canary_server_port: 80
+canary_server_address: 192.168.110.100
+canary_server_name: canary
