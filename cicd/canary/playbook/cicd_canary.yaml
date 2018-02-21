@@ -6,16 +6,16 @@
   tasks:
   - name: Uploading the Canary CICD workflow template to vDirect
     tags:
-    - init
+    - upload
     vdirect_file:
       vdirect_ip: "{{ vdirect_ip }}"
       vdirect_user: "{{ vdirect_user }}"
       vdirect_password: "{{ vdirect_password }}"
       vdirect_validate_certs: "{{ vdirect_validate_certs }}"
-      file_name: cicd_canary.zip
-  - name: Creating cicd_canary workflow
+      file_name: "{{ workflow_template_file }}"
+  - name: Creating CICD Canary workflow
     tags:
-    - init
+    - create
     vdirect_runnable:
       vdirect_ip: "{{ vdirect_ip }}"
       vdirect_user: "{{ vdirect_user }}"
@@ -23,7 +23,7 @@
       vdirect_validate_certs: "{{ vdirect_validate_certs }}"
       runnable_type: WorkflowTemplate
       runnable_name: Canary CICD
-      parameters: {'adc':[{'type':'Adc','name':"{{ device }}"}], 'workflowName': 'cicd_canary'}
+      parameters: {'adc':[{'type':'Adc','name': "{{ device }}"}], 'workflowName': "{{ workflow_name}}"}
   - name: Deploying canary server
     tags:
     - deploy
@@ -34,7 +34,7 @@
       vdirect_validate_certs: "{{ vdirect_validate_certs }}"
       runnable_type: Workflow
       action_name: deploy
-      runnable_name: cicd_canary
+      runnable_name: "{{ workflow_name}}"
       parameters: {'group':"{{ group }}", 'canary':{'id':"{{ canary_server_id }}", 'port':"{{ canary_server_port }}", 'address':"{{ canary_server_address }}", 'name': "{{ canary_server_name }}"}, 'normal_weight':"{{ normal_weight }}", 'canary_weight':"{{ canary_weight }}"}
   - name: Updating servers' weights 
     tags:
@@ -46,7 +46,7 @@
       vdirect_validate_certs: "{{ vdirect_validate_certs }}"
       runnable_type: Workflow
       action_name: update
-      runnable_name: cicd_canary
+      runnable_name: "{{ workflow_name}}"
       parameters: {'normal_weight':"{{ normal_weight }}", 'canary_weight':"{{ canary_weight }}"}
   - name: Undeploying canary server
     tags:
@@ -58,8 +58,8 @@
       vdirect_validate_certs: "{{ vdirect_validate_certs }}"
       runnable_type: Workflow
       action_name: undeploy
-      runnable_name: cicd_canary
-  - name: Removing cicd_canary workflow 
+      runnable_name: "{{ workflow_name}}"
+  - name: Removing CICD Canary workflow 
     tags:
     - remove
     vdirect_runnable:
@@ -69,4 +69,4 @@
       vdirect_validate_certs: "{{ vdirect_validate_certs }}"
       runnable_type: Workflow
       action_name: deleteWorkflow
-      runnable_name: cicd_canary
+      runnable_name: "{{ workflow_name}}"

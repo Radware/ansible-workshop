@@ -108,7 +108,7 @@ class CanaryCICDWorkflow {
 		devices.commit(true, true, true)
 	}
 			
-	@Action(fromState=["applied"], toState="applied")
+	@Action(fromState="applied", toState="applied")
 	void update (
 			@Param(ref="normal_weight") Integer normalWeight,
 			@Param(ref="canary_weight") Integer canaryWeight) {
@@ -147,7 +147,7 @@ class CanaryCICDWorkflow {
 		devices.commit(true, true, true)
 	}
 
-	@Action(fromState="initialized", toState='removed')
+	@Action(fromState=["initialized","applied"], toState='removed')
 	void teardown () {
 		if (!workflow.state.equals('applied')) {
 			return
