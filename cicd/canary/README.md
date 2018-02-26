@@ -16,7 +16,7 @@ This example contains a playbook folder and a workflow folder.
 1.  cicd_canary.yaml playbook file. The playbook uses parameters files from the vars folder.
 2.  vars folder with three playbook parameters files
 	*  **vdirect_params.yml** - contains vDirect parameters.
-	*  **canary_parames.yml** - contains vDirect workflow template file name, vDirect workflow instance name,
+	*  **canary_params.yml** - contains vDirect workflow template file name, vDirect workflow instance name,
 	   Alteon device name, real servers group name the canary server will be added to,
 	   and canary real server parameters.
 	*  **weight_params.yml** - contains real server weight values, for group existing servers and for the canary server.
@@ -57,14 +57,7 @@ This example contains a playbook folder and a workflow folder.
                  actions are *undeploy* and *update*
     *  **update** - updating real servers' weight
     *  **undeploy** - undeploying the canary server
-    *  **remove** - removing the cicd_canary workflow. The canary server will be undeployed.
-
-*  You can use the playbook without tags specification for the first time.
-   It will upload the workflow template, create the workflow instance and deploy the canary server.
-	**Example:**
-	```
-	ansible-playbook cicd_canary.yaml
-	```
+    *  **remove** - removing the *Canary CICD* workflow. The canary server will be undeployed.
 
 *  You can use the playbook with *upload* and *create* tags.
    It will upload the workflow template, create the workflow and will not deploy the canary server.
