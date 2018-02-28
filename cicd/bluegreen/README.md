@@ -8,6 +8,14 @@
 	*  Playbook parameters files should be reviewed and modified prior to using the playbook.
 	See parameters files description below.
 
+## Installation
+In order to use this workshop you need a linux server with GIT, ANSIBLE v2.5 and ZIP installed.
+
+1.  Create a folder for cloning this GIT repositorty.
+2.  Clone the repository
+```
+git clone https://github.com/Radware/ansible-workshop.git
+```
 
 ## General
 This example contains a playbook folder and a workflow folder.

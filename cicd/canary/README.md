@@ -9,6 +9,16 @@
 	See parameters files description below.
 
 
+## Installation
+In order to use this workshop you need a linux server with GIT, ANSIBLE v2.5 and ZIP installed.
+
+1.  Create a folder for cloning this GIT repositorty.
+2.  Clone the repository
+```
+git clone https://github.com/Radware/ansible-workshop.git
+```
+
+
 ## General
 This example contains a playbook folder and a workflow folder.
 
@@ -24,6 +34,7 @@ This example contains a playbook folder and a workflow folder.
 
 **The workflow folder contains:**
 1.  vDirect workflow source files. 
+
   
 ## Before using the playbook
 1.  First, the vDirect workflow should be created from the source.

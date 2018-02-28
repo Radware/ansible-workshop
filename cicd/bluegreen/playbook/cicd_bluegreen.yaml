@@ -22,42 +22,31 @@
       vdirect_validate_certs: "{{ vdirect_validate_certs }}"
       runnable_type: WorkflowTemplate
       runnable_name: BlueGreen CICD
-      parameters: {'adc':[{'type':'Adc','name': "{{ device }}"}], 'application': "{{ application }}"}
-  - name: Deploying canary server
+      parameters: {'adc':[{'type':'Adc','name': "{{ device }}"}], 'workflowName': "{{ workflow_name }}", 'application': "{{ application }}"}
+  - name: Switching application to BLUE
     tags:
-    - deploy
+    - blue
     vdirect_runnable:
       vdirect_ip: "{{ vdirect_ip }}"
       vdirect_user: "{{ vdirect_user }}"
       vdirect_password: "{{ vdirect_password }}"
       vdirect_validate_certs: "{{ vdirect_validate_certs }}"
       runnable_type: Workflow
-      action_name: deploy
-      runnable_name: "{{ workflow_name}}"
-      parameters: {'group':"{{ group }}", 'canary':{'id':"{{ canary_server_id }}", 'port':"{{ canary_server_port }}", 'address':"{{ canary_server_address }}", 'name': "{{ canary_server_name }}"}, 'normal_weight':"{{ normal_weight }}", 'canary_weight':"{{ canary_weight }}"}
-  - name: Updating servers' weights 
+      action_name: switchToBlue
+      runnable_name: "{{ workflow_name }}"
+      parameters: {}
+  - name: Switching application to GREEN
     tags:
-    - update
+    - green
     vdirect_runnable:
       vdirect_ip: "{{ vdirect_ip }}"
       vdirect_user: "{{ vdirect_user }}"
       vdirect_password: "{{ vdirect_password }}"
       vdirect_validate_certs: "{{ vdirect_validate_certs }}"
       runnable_type: Workflow
-      action_name: update
-      runnable_name: "{{ workflow_name}}"
-      parameters: {'normal_weight':"{{ normal_weight }}", 'canary_weight':"{{ canary_weight }}"}
-  - name: Undeploying canary server
-    tags:
-    - undeploy
-    vdirect_runnable:
-      vdirect_ip: "{{ vdirect_ip }}"
-      vdirect_user: "{{ vdirect_user }}"
-      vdirect_password: "{{ vdirect_password }}"
-      vdirect_validate_certs: "{{ vdirect_validate_certs }}"
-      runnable_type: Workflow
-      action_name: undeploy
-      runnable_name: "{{ workflow_name}}"
+      action_name: switchToGreen
+      runnable_name: "{{ workflow_name }}"
+      parameters: {}
   - name: Removing CICD Canary workflow 
     tags:
     - remove
