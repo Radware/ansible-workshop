@@ -16,7 +16,7 @@ In order to use this workshop you need a linux server with GIT, ANSIBLE v2.5 and
 ```
 git clone https://github.com/Radware/ansible-workshop.git
 ```
-3. Change directory to the bluegreen workshop example
+3. Change directory to the CICD bluegreen workshop example
 ```
 cd ansible-workshop/cicd/bluegreen
 ```
