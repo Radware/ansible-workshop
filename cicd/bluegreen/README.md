@@ -16,9 +16,13 @@ In order to use this workshop you need a linux server with GIT, ANSIBLE v2.5 and
 ```
 git clone https://github.com/Radware/ansible-workshop.git
 ```
+3. Change directory to the bluegreen workshop example
+```
+cd ansible-workshop/cicd/bluegreen
+```
 
 ## General
-This example contains a playbook folder and a workflow folder.
+This example contains this **README.md** file, **playbook** folder and **workflow** folder.
 
 **The playbook folder contains:**
 1.  cicd_bluegreen.yaml playbook file. The playbook uses parameters files from the vars folder.
