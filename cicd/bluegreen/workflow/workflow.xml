@@ -1,7 +1,0 @@
-<?xml version="1.0" ?>
-<workflow
-	name="BlueGreen CICD"
-	xmlns="http://www.radware.com/vdirect"
-	class="com.radware.vdirect.ansible.workshop.cicd.bluegreen.BlueGreenCICDWorkflow">
-	<description>Workflow for Blue/Green CICD v4.4.0</description>
-</workflow>

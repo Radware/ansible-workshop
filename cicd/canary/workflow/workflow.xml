@@ -1,7 +1,0 @@
-<?xml version="1.0" ?>
-<workflow
-	name="Canary CICD"
-	xmlns="http://www.radware.com/vdirect"
-	class="com.radware.vdirect.ansible.workshop.cicd.canary.CanaryCICDWorkflow">
-	<description>Workflow for Canary CICD v4.4.0</description>
-</workflow>
