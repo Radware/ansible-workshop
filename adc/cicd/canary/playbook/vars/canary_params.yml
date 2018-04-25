@@ -1,0 +1,23 @@
+#The FQN of workflow template ZIP file
+workflow_template_file: ../workflow/cicd_canary.zip
+
+#The name of vDirect workflow instance
+workflow_name: Canary CICD
+
+#The name of Alteon device as it appears in vDirect->Inventory->ADCs
+device: <alteon_device>
+
+#The id of real servers group to add the canary server to
+group: <group_to_add_the_canary_server_to>
+
+#The canary server IP address
+canary_server_address: 0.0.0.0
+
+#The id of canary real server
+canary_server_id: canary
+
+#The port number of canary real server
+canary_server_port: 80
+
+#The name of canary real server
+canary_server_name: canary

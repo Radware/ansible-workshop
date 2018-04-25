@@ -1,0 +1,11 @@
+
+#property('summary', 'Modifying real servers weight for production and Canary servers')
+
+#param('virtId', 'string', 'in')
+#param('servicePort', 'string', 'in')
+#param('serviceProtocol', 'string', 'in')
+#param('groupId', 'string', 'in')
+
+
+/c/slb/virt $virtId/service $servicePort $serviceProtocol
+    group $groupId

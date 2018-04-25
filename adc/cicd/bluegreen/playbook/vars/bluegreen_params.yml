@@ -1,0 +1,19 @@
+#The FQN of workflow template ZIP file
+workflow_template_file: ../workflow/cicd_bluegreen.zip
+
+#The name of vDirect workflow instance
+workflow_name: BlueGreen CICD
+
+#The name of Alteon device as it appears in vDirect->Inventory->ADCs
+device:  
+
+application:
+  ip: 0.0.0.0
+  services:
+    -
+      id: <service ip> 
+      protocol: <service protocol>
+      port: <service protocol>
+      blueGroupId: <blue group id>
+      greenGroupId: <green group id>
+

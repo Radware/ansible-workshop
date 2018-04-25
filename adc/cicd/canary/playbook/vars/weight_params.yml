@@ -1,0 +1,5 @@
+#Weight of existing group's real servers
+normal_weight: 3
+
+#Weight of canary real server
+canary_weight: 1

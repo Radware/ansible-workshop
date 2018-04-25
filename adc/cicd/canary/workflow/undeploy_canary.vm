@@ -1,0 +1,34 @@
+
+#property('summary', 'Modifying production real servers weight and removing canary server')
+
+#typedef('RealServer')
+	#param($id,'string')
+	#param($port,'int','defaultValue=80')
+	#param($address,'ip')
+	#param($name,'string')
+#end
+
+#param('canary', 'RealServer', 'in')
+#param('groupId', 'string', 'in', 'prompt=Group Id')
+#param('origin_weights', 'object', 'in')
+
+## Get group's servers
+#set($bean = $adc.newBean("SlbCurCfgEnhGroupRealServerEntry"))
+#set($servers = $adc.readAll($bean))
+
+## Remove canary server from group
+/c/slb/group $groupId
+	rem $canary.id
+
+## Remove canary server
+/c/slb/real $canary.id
+	del
+
+## Update production servers' weight
+#log("Seting production servers' original weight for group $groupId")
+#foreach ($server in $servers)
+	#if ($server.realServGroupIndex == $groupId && $server.servIndex != $canary.id)
+		/c/slb/real $server.servIndex
+			weight $origin_weights.get($server.servIndex)
+	#end
+#end
