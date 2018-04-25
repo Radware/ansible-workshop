@@ -1,5 +1,5 @@
 #vDirect server IP address
-vdirect_ip: 10.205.124.63
+vdirect_ip: <vDirect server IP>
 
 #vDirect server user
 vdirect_user: vDirect
