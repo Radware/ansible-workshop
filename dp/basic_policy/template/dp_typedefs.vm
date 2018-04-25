@@ -1,0 +1,48 @@
+#typedef('IPMask')
+	#param($address, 'type=ip', 'prompt=Network Address', 'defaultValue=0.0.0.0')
+	#param($mask, 'type=ip', 'prompt=Mask', 'defaultValue=255.255.255.0')
+#end
+	
+#typedef('IPRange')
+	#param($from_ip, 'type=ip', 'prompt=From IP', 'defaultValue=0.0.0.0')
+	#param($to_ip, 'type=ip', 'prompt=To IP', 'defaultValue=0.0.0.0')
+#end
+ 
+#typedef('Network')
+	#param($ip_mask_list, 'prompt=Network Mask', 'type=IPMask[]')
+	#param($ip_range_list, 'prompt=Network Range', 'type=IPRange[]')
+#end
+ 
+#typedef('VlanTagRanges')
+	#param($vlan_tag_from, 'prompt=VLAN Tag From', 'type=int', 'min = 1', 'max = 4096')
+	#param($vlan_tag_to, 'prompt=VLAN Tag To', 'type=int', 'min = 1', 'max = 4096')
+#end
+
+#typedef('VlanTagGroups')
+	#param($vlan_discrete_tags, 'prompt=VLAN Discrete Tags', 'type=int[]', 'min = 1', 'max = 4096')
+	#param($vlan_tag_ranges, 'prompt=VLAN Range Tags', 'type=VlanTagRanges[]')
+#end 
+ 
+#typedef('BDoSProfile')
+    #param($profile_enabled, 'prompt=BDoS Profile Enabled', 'type=bool', 'defaultValue=true')
+	#param($bdos_profile_inbound_bandwith, 'prompt=BDoS Profile Inbound Bandwith', 'type=int', 'defaultValue=100000', 'min = 1')
+	#param($bdos_profile_outbound_bandwith, 'prompt=BDoS Profile Outbound Bandwith', 'type=int', 'defaultValue=200000', 'min = 1')
+#end
+
+#typedef('DNSProfile')
+    #param($profile_enabled, 'prompt=DNS Profile Enabled', 'type=bool', 'defaultValue=true')
+	#param($exp_qps, 'prompt=Expected QPS', 'type=int', 'defaultValue=500', 'min = 1')
+	#param($max_qps, 'prompt=Max QPS', 'type=int', 'defaultValue=5000', 'min = 1')
+#end
+
+#typedef('SYNProfile')
+	#param($protection_type, 'prompt=Protection Type', 'type=string', 'values=FTP_CNTL,HTTP,HTTPS,IMAP,POP3,RPC,RTSP,SMTP,TELNET', 'defaultValue=HTTP')
+#end
+
+#typedef('OOSProfile')
+    #param($profile_enabled, 'prompt=Out Of State Profile Enabled', 'type=bool', 'defaultValue=true')
+#end
+
+#typedef('CrackingProfile')
+	#param($protection_type, 'prompt=Protection Type', 'type=string', 'values=Brute Force DNS,Brute Force FTP,Brute Force IMAP,Brute Force LDAP,Brute Force MSSQL,Brute Force MySQL,Brute Force POP3,"Brute Force SIP (TCP),Brute Force SIP (UDP),Brute Force SIP DST (TCP),Brute Force SIP DST (UDP),Brute Force SMB,Brute Force SMTP,Brute Force Web,SIP Scan (TCP),SIP Scan (UDP),SIP Scan DST (UDP),SIP Scan DST  (UDP),SIP Scan DST  (TCP),SMTP Scan,Web Scan')
+#end

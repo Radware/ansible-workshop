@@ -5,4 +5,8 @@ The repository contains two playbooks for Radware Alteon ADC:
 1. CICD Canary
 2. CICD BlueGreen
 
-See *README* files of each one of them
+and one playbook for Radware DefensePro:
+
+1. DP Basic policy appliance
+
+For detailed information - see *README* files of each one of them

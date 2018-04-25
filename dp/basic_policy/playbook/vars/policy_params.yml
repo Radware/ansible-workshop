@@ -1,0 +1,57 @@
+create_configuration_template_file: ../template/dp_create_policy.vm
+delete_configuration_template_file: ../template/dp_delete_policy.vm
+crud_configuration_template_file: ../template/dp_crud.vm
+typedefs_configuration_template_file: ../template/dp_typedefs.vm
+version_configuration_template_file: ../template/dp_version.vm
+
+create_configuration_template: dp_create_policy.vm
+delete_configuration_template: dp_delete_policy.vm
+
+defensePro: <DefensePro device name as appears in vDirect>
+
+policy_name: policy1
+
+source_network:
+  ip_mask_list:
+    - address: <IP>
+      mask: 255.255.255.0
+  ip_range_list:
+    - from_ip: <IP>
+      to_ip: 192.168.10.20
+
+destination_network:
+  ip_mask_list:
+    - address: <IP>
+      mask: 255.255.255.0
+  ip_range_list:
+    - from_ip: <IP>
+      to_ip: 192.168.20.20
+  
+vlan_tag_groups:
+  vlan_discrete_tags:
+    - 10
+    - 11
+  vlan_tag_ranges:
+    - vlan_tag_from: 20
+      vlan_tag_to: 30
+
+bdos_profile:
+  profile_enabled: yes
+  bdos_profile_inbound_bandwith: 100000
+  bdos_profile_outbound_bandwith: 200000
+  
+syn_protection_types:
+  - protection_type: HTTP
+
+dns_profile:
+  profile_enabled: yes
+  exp_qps: 500
+  max_qps: 5000
+
+oos_profile:
+  profile_enabled: yes
+
+cracking_protection_types:
+  - protection_type: Brute Force DNS
+
+policy_action: report

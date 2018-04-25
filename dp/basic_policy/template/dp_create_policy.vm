@@ -1,0 +1,68 @@
+#parse("dp_typedefs.vm")
+#parse("dp_crud.vm")
+
+#param($policy_name, 'string', 'in')
+#param($source_network, 'Network', 'in', 'prompt=Source Network')
+#param($destination_network, 'Network', 'in', 'prompt=Destination Network')
+#param($vlan_tag_groups, 'VlanTagGroups', 'in', 'prompt=Vlan Tag Group')
+#param($bdos_profile, 'BDoSProfile', 'in', 'prompt=BDOS Profile')
+#param($syn_protection_types, 'SYNProfile[]', 'in', 'prompt=SYN Profile')
+#param($dns_profile, 'DNSProfile', 'in', 'prompt=DNS Profile')
+#param($oos_profile, 'OOSProfile', 'in', 'prompt=OOS Profile')
+#param($cracking_protection_types, 'CrackingProfile[]', 'in', 'prompt=Server Cracking Profile')
+#param($policy_action, 'string', 'in', 'prompt=Action')
+
+#device($defensePro, 'type=defensePro', 'version=7.42.02'))
+#haltOnDeviceError(true)
+
+#set($source_network_name = $policy_name + '_s')
+#set($destination_network_name = $policy_name + '_d')
+#set($vlan_tag_group_name = $policy_name)
+#set($bdos_profile_name = $policy_name)
+#set($syn_profile_name = $policy_name)
+#set($dns_profile_name = $policy_name)
+#set($oos_profile_name = $policy_name)
+#set($cracking_profile_name = $policy_name)
+
+#set($existing_objects = [])
+
+#log('info',"Verify if policy $policy_name or any related objects already exist on the device.")
+#verify_object_exist($policy_name, 'RsIDSNewRulesEntry', $existing_objects)
+#verify_object_exist($source_network_name, 'RsBWMNetworkEntry', $existing_objects)
+#verify_object_exist($destination_network_name, 'RsBWMNetworkEntry', $existing_objects)
+#verify_object_exist($vlan_tag_group_name, 'RsBWMVLANTagGroupEntry', $existing_objects)
+#verify_object_exist($bdos_profile_name, 'RsNetFloodProfileEntry', $existing_objects)
+#verify_object_exist($syn_profile_name, 'RsIDSSynProfilesEntry', $existing_objects)
+#verify_object_exist($dns_profile_name,'RsDnsProtProfileEntry', $existing_objects)
+#verify_object_exist($oos_profile_name, 'RsStatefulProfileEntry', $existing_objects)
+#verify_object_exist($cracking_profile_name, 'RsIDSServProtProfilesEntry', $existing_objects)
+
+
+#if(!$existing_objects.isEmpty())
+    #set($info_message = "Objects $existing_objects already exist on device, workflow will update the existing objects")
+    #log('info',$info_message) 
+	#set($need_sync = true)
+#else
+    #set($need_sync = false)
+	#log('info',"No policy $policy_name related objects exist on device.")
+#end
+
+#log('info',"Make sure Policy exists and is empty")
+#create_or_update_empty_policy($policy_name,$policy_action)
+#set($major_ver = [])
+#get_dp_major_version($major_ver)
+#if($major_ver[0] >= 7)
+	#set_policy_instance($policy_name)
+#end
+
+##creating all profiles
+#create_network_ip_mask($source_network_name, $source_network.ip_mask_list, $source_network.ip_range_list, '-sn', $policy_name)
+#create_network_ip_mask($destination_network_name, $destination_network.ip_mask_list, $destination_network.ip_range_list, '-dn', $policy_name)
+#create_vlan_tag_group($vlan_tag_group_name, $vlan_tag_groups.vlan_discrete_tags, $vlan_tag_groups.vlan_tag_ranges, $policy_name)
+#create_bdos_profile($bdos_profile_name, $bdos_profile, $policy_name)
+#create_syn_profile($syn_profile_name, $syn_protection_types, $policy_name)
+#create_dns_profile($dns_profile_name, $dns_profile, $policy_name)
+#create_oos_profile($oos_profile_name, $oos_profile, $policy_name)
+#create_cracking_profile($cracking_profile_name, $cracking_protection_types, $policy_name,$vlan_tag_group_name, $destination_network_name, $destination_network.ip_mask_list, $destination_network.ip_range_list)
+
+#end

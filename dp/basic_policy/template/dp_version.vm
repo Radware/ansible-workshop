@@ -1,0 +1,16 @@
+## This macro calculates the dp major version, it gets one argument "version" 
+## "version" is an in/out argument and should be declared as array. 
+## example : 
+## set($version = [])
+## get_dp_major_version($version)
+## #if($version[0] == 6)
+##      you code here
+## #end
+
+#macro(get_dp_major_version,$major_ver)
+		#set($version = $defensePro.readBean("RndDeviceParams").rndBrgVersion)
+		#set($ver_split = $version.split("[.]"))
+		#set($temp_major_ver = 0)
+		#set($temp_major_ver = $temp_major_ver.parseInt($ver_split[0]))
+        #set($dummy = $major_ver.add($temp_major_ver))
+#end

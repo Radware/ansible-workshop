@@ -1,0 +1,498 @@
+#parse("dp_version.vm")
+## ---------------- Create objects section ----------------
+
+#macro(create_or_update_empty_policy, $policy_name,$policy_action)
+    #set($action = '')
+    #set($object = $defensePro.newBean('RsIDSNewRulesEntry'))
+    #set($object.name = $policy_name)
+    #set($found_object =  $defensePro.read($object))
+    #if($found_object.isEmpty())
+        #set($action = 'create')
+    #else
+        #set($action = 'set')
+    #end
+	dp policies-config table $action $policy_name -sn any -dn any \
+     -pm "" -vln "" -sig All-DoS-Shield -con "" \
+    -oos "" -dos "" -syn "" -dns "" -a "$policy_action"
+#end
+
+#macro(set_policy_instance,$policy_name)
+	#set($freest_instance = [])
+	#get_freest_instance($freest_instance)
+	dp policies-config table set $policy_name -ins "$freest_instance[0]"
+#end
+
+#macro(get_freest_instance,$freest_instance)
+	#set($instance0_counter=0)
+	#set($instance1_counter=0)
+    #set($policies = [])
+    #set($object_to_read = $defensePro.newBean('RsIDSNewRulesEntry'))  
+    #set($objects =  $defensePro.readAll($object_to_read))
+    #foreach($object in $objects)
+        #if($object.instanceId == 'INSTANCE0')
+            #set($instance0_counter=$instance0_counter+1)
+        #end
+        #if($object.instanceId == 'INSTANCE1')
+            #set($instance1_counter=$instance1_counter+1)
+        #end
+    #end
+    #if($instance0_counter>$instance1_counter)
+    	#set($dummy=$freest_instance.add('Instance 1'))
+    #else
+    	#set($dummy=$freest_instance.add('Instance 0'))
+    #end
+#end
+
+#macro(delete_policy, $policy_name)
+    dp policies-config table del $policy_name
+#end
+
+#macro(verify_object_removed, $name, $bean_name, $error_names)
+    #if($name != 'any')
+		#set($object = $defensePro.newBean($bean_name))
+		#set($object.name = $name)
+		#set($found_object =  $defensePro.read($object))
+		#if($found_object.isEmpty())
+			#log('info',"Object $bean_name $name removed successfully.")
+		#else
+			#set($status = $error_names.add($name))
+		#end
+	#end
+#end
+
+#macro(verify_object_exist, $name, $bean_name, $existing_objects)
+    #set($object = $defensePro.newBean($bean_name))
+    #set($object.name = $name)
+    #set($found_object =  $defensePro.read($object))
+    #if(!$found_object.isEmpty())
+        #set($status = $existing_objects.add($name))
+    #end
+#end
+
+#macro(create_network_ip_mask, $network_name, $ip_mask_list, $ip_range_list, $ntw_type, $policy_name)
+	#if($ip_mask_list.isEmpty() && $ip_range_list.isEmpty())
+       	#log('info',"$ntw_type network input object is empty.")
+        #set($network_name = 'any')
+	#else
+        #set($nework_sub_index = 0)
+        #log('info',"Create $ntw_type network $network_name .")
+        
+        #foreach($ip_mask in $ip_mask_list)
+			classes modify network create $network_name $nework_sub_index -a $ip_mask.address -s $ip_mask.mask -m "IP Mask"
+			#set($nework_sub_index = $nework_sub_index + 1)
+        #end
+        
+        #foreach($ip_range in $ip_range_list)
+			#if($ip_range.from_ip == '0.0.0.0' || $ip_range.to_ip == '0.0.0.0')
+				#log('info',"IP Range $ip_range.from_ip - $ip_range.to_ip is ignored")
+			#else
+				#log('info',"Add IP Range $ip_range.from_ip - $ip_range.to_ip")
+				classes modify network create $network_name $nework_sub_index -f $ip_range.from_ip -t $ip_range.to_ip -m "IP Range"
+				#set($nework_sub_index = $nework_sub_index +1)
+			#end
+        #end
+    #end
+    #if($policy_name != '')
+        dp policies-config table set $policy_name $ntw_type $network_name
+    #end
+#end
+
+#macro(create_vlan_tag_group, $vlan_tag_group_name, $vlan_discrete_tags, $vlan_tag_ranges, $policy_name)
+	#if($vlan_discrete_tags.isEmpty() && $vlan_tag_ranges.isEmpty())
+		#log('info',"Vlan tag group $vlan_tag_group_name is empty.")
+        #set($vlan_tag_group_name = '"""')
+	#else
+        #foreach($discrete_tag in $vlan_discrete_tags)
+            #log('info',"Add Discrete TAG  $discrete_tag")
+            classes modify vlan-tag-groups create $vlan_tag_group_name $discrete_tag Any
+        #end
+        #foreach($range_tag in $vlan_tag_ranges)
+            #log('info',"Add TAG range from $range_tag.vlan_tag_from to $range_tag.vlan_tag_to")
+            classes modify vlan-tag-groups create $vlan_tag_group_name Any $range_tag.vlan_tag_from -vt $range_tag.vlan_tag_to -m Range
+        #end
+    #end
+    #if($policy_name != '')
+        dp policies-config table set $policy_name -vln $vlan_tag_group_name
+    #end
+#end
+
+#macro(create_physical_port_group, $physical_port_group_name, $physical_ports, $policy_name)
+	#if($physical_ports.isEmpty())
+		#log('info',"Physical port group $physical_port_group_name is empty.")
+        #set($physical_port_group_name = '"""')
+    #else
+        #log('info',"Create physical port group $physical_port_group_name.")
+        #foreach($port in $physical_ports)
+            #log('info',"Add Physical port $port to port group $physical_port_group_name .")
+            classes modify physical-port-groups create $physical_port_group_name $port
+        #end
+	#end
+    #if($policy_name != '')
+        dp policies-config table set $policy_name -pm $physical_port_group_name
+    #end
+#end
+
+#macro(create_bdos_profile, $bdos_profile_name, $bdos_profile, $policy_name)
+    #if($bdos_profile.profile_enabled)
+		#log('info',"Creating BDoS profile $bdos_profile_name")
+        dp behavioral-DoS global advanced profile-configuration create $bdos_profile_name -tcpsyn active -udp active -igmp active -icmp active -tcpf active -tcpr active -tcps active -tcpfrg active -band_in $bdos_profile.bdos_profile_inbound_bandwith -band_out $bdos_profile.bdos_profile_outbound_bandwith -in_tcp_quota 75 -in_udp_quota 50 -in_icmp_quota 1 -in_igmp_quota 1 -out_tcp_quota 75 -out_udp_quota 50 -out_icmp_quota 1 -out_igmp_quota 1
+    #else
+        #set($bdos_profile_name = '"""')
+    #end
+    #if($policy_name != '')
+		#log('info',"Setting BDoS profile $bdos_profile_name for policy $policy_name")
+        dp policies-config table set $policy_name -dos $bdos_profile_name
+    #end
+#end
+
+#macro(create_syn_profile, $syn_profile_name, $syn_protection_types, $policy_name)
+    #set($uniqueProtections={})
+    #foreach($type in $syn_protection_types)
+        #set($val=$uniqueProtections.get($type.protection_type))
+		#if($defensePro.isNull($val))
+            #set($addStatus=$uniqueProtections.put($type.protection_type, $type.protection_type))
+		#else
+            #error("SYN protection type duplication is not accepted - $type.protection_type !!!") 
+		#end      
+    #end
+   
+    #if($syn_protection_types.isEmpty())
+		#log('info',"SYN protection profile $syn_profile_name is empty.")
+        #set($syn_profile_name = '"""')
+    #else
+        #log('info',"Creating SYN protection profile $syn_profile_name .")
+        #foreach($type in $syn_protection_types)
+            #log('info',"Add protection type $type.protection_type to syn profile $syn_profile_name.")
+            hidden profile create $syn_profile_name $type.protection_type -aid 200000
+        #end
+	#end   
+    #if($policy_name != '')
+		#log('info',"Setting SYN profile $syn_profile_name for policy $policy_name")
+        dp policies-config table set $policy_name -syn $syn_profile_name
+    #end
+#end
+
+#macro(create_dns_profile, $dns_profile_name, $dns_profile, $policy_name)
+    #if($dns_profile.profile_enabled)
+		#log('info',"Creating DNS profile $dns_profile_name")
+        dp dns-protection global advanced profiles create $dns_profile_name -dns_a \
+        active -dns_mx active -dns_ptr active -dns_aaaa active -dns_text active \
+        -dns_soa active -dns_naptr active -dns_srv active -dns_other active -qps \
+        $dns_profile.exp_qps -dns_a_quota 90 -dns_mx_quota 45 -dns_ptr_quota 45 \
+        -dns_aaaa_quota 15 \
+        -dns_text_quota 8 -dns_soa_quota 2 -dns_naptr_quota 2 -dns_srv_quota 2 \
+        -dns_other_quota 2 -max_qps $dns_profile.max_qps
+    #else
+        #set($dns_profile_name = '"""')
+    #end
+    #if($policy_name != '')
+		#log('info',"Setting DNS profile $dns_profile_name for policy $policy_name")
+        dp policies-config table set $policy_name -dns $dns_profile_name
+    #end
+#end
+
+#macro(create_oos_profile, $oos_profile_name, $oos_profile, $policy_name)
+    #if($oos_profile.profile_enabled)
+		#log('info',"Creating Out Of State profile $oos_profile_name")
+		dp out-of-state profiles create $oos_profile_name
+    #else
+        #set($oos_profile_name = '"""')
+    #end
+    #if($policy_name != '')
+		#log('info',"Setting Out Of State profile $oos_profile_name for policy $policy_name")
+        dp policies-config table set $policy_name -oos $oos_profile_name
+    #end
+#end
+
+#macro(create_cracking_profile, $cracking_profile_name, $cracking_protection_types, $policy_name, $vlan_tag_group_name, $destination_network_name, $dst_ip_mask_list, $dst_ip_range_list)
+    #if($dst_ip_mask_list.isEmpty() && $dst_ip_range_list.isEmpty())
+        #set($destination_network_name = 'any')
+	#end
+	#set($uniqueProtections={})
+    #foreach($type in $cracking_protection_types)
+        #set($val=$uniqueProtections.get($type.protection_type))
+		#if($defensePro.isNull($val))
+            #set($addStatus=$uniqueProtections.put($type.protection_type, $type.protection_type))
+		#else
+            #error("Cracking protection type duplication is not accepted - $type.protection_type !!!") 
+		#end      
+    #end
+   
+    #if($cracking_protection_types.isEmpty())
+		#log('info',"Cracking protection profile $cracking_profile_name is empty.")
+        #set($cracking_profile_name = '"""')
+    #else
+        #log('info',"Creating Cracking protection profile $cracking_profile_name .")
+        #foreach($type in $cracking_protection_types)
+            #log('info',"Add protection type $type.protection_type to cracking profile $cracking_profile_name.")
+			#log('info',"hidden cracking-protection profiles setCreate $cracking_profile_name ""$type.protection_type"" ")
+			hidden cracking-protection profiles setCreate $cracking_profile_name "$type.protection_type"
+        #end
+	#end 
+	#if($policy_name != '')
+		#log('info',"Setting Protected Server with Cracking profile $cracking_profile_name $vlan_tag_group_name $destination_network_name and attached to policy $policy_name")
+		#set($protected_server_name = $policy_name + '_server_crack')
+		#set($major_ver = [])
+		#get_dp_major_version($major_ver)
+		#if($major_ver[0] == 6)
+			dp server-protection protected-servers create $protected_server_name -vlan $vlan_tag_group_name -dst $destination_network_name
+		#else
+            dp server-protection protected-servers create $protected_server_name -vlan $vlan_tag_group_name -dst $destination_network_name -pn $policy_name
+		#end
+    #end
+#end
+
+## ---------------- Sync objects section ----------------
+
+#macro(pull_network_from_device, $network_name, $network_object)
+    #set($network_object.ip_mask_list = [])
+	#set($network_object.ip_range_list = []) 
+    #log('info',"Syncing Network $network_name")
+    #set($object_to_read = $defensePro.newBean('RsBWMNetworkEntry'))
+    #set($object_to_read.name = $network_name)    
+    #set($objects =  $defensePro.readAll($object_to_read))       
+    #if(!$objects.isEmpty())
+		#foreach($object in $objects)
+            #log('info',"Network found $object")
+            #if($object.mode == 'IPMASK')
+                #set($ip = $ipAddress.addressToString($object.address))
+                #set($ip_mask = {"address" : $ip, "mask" : $object.mask})
+                #set($status = $network_object.ip_mask_list.add($ip_mask))
+            #elseif($object.mode == 'IPRANGE')
+                #set($from_ip = $ipAddress.addressToString($object.fromIP))
+                #set($to_ip = $ipAddress.addressToString($object.toIP))
+                #set($ip_range = {"from_ip" : $from_ip, "to_ip" : $to_ip})
+                #set($status = $network_object.ip_range_list.add($ip_range))
+            #end
+		#end
+		#log('info',"Networks found $network_object")
+    #end
+#end
+
+#macro(pull_vlans_from_device, $vlan_group_name, $vlan_group_object)    
+	#set($vlan_group_object.vlan_discrete_tags = [])
+	#set($vlan_group_object.vlan_tag_ranges = [])
+    
+    #set($object_to_read = $defensePro.newBean('RsBWMVLANTagGroupEntry'))
+    #set($object_to_read.name = $vlan_group_name)    
+    #set($objects =  $defensePro.readAll($object_to_read))  			
+    #if(!$objects.isEmpty())
+		#foreach($object in $objects)
+            #if($object.mode == 'DISCRETE')
+                #set($status = $vlan_group_object.vlan_discrete_tags.add($object.vLANTag))
+            #elseif($object.mode == 'RANGE')
+                #log('info',"vlan_tag_from = $object.vLANTagFrom vlan_tag_to = $object.vLANTagTo")			
+                #set($vlan_range = {"vlan_tag_from" : $object.vLANTagFrom, "vlan_tag_to" : $object.vLANTagTo})
+                #set($status = $vlan_group_object.vlan_tag_ranges.add($vlan_range))
+            #end
+		#end
+		#log('info',"VLANs found $vlan_group_object")
+	#end
+#end
+
+#macro(pull_ports_from_device, $port_group_name, $physical_ports)
+	#set($physical_ports = [])
+    
+    #set($object_to_read = $defensePro.newBean('RsBWMPhysicalPortGroupEntry'))
+    #set($object_to_read.name = $port_group_name)    
+    #set($objects =  $defensePro.readAll($object_to_read))    
+    #if(!$objects.isEmpty())
+		#foreach($object in $objects)
+            #log('info',"Port found $object.port")
+            #set($status = $physical_ports.add($object.port))
+		#end
+	#end
+#end
+
+#macro(pull_bdos_profile_from_device, $bdos_profile_name, $bdos_profile_object)
+    #set($object_to_read = $defensePro.newBean('RsNetFloodProfileEntry'))
+    #set($object_to_read.name = $bdos_profile_name)    
+    #set($object =  $defensePro.read($object_to_read))  
+    #if(!$object.isEmpty())
+		#set($bdos_profile_object.bdos_profile_inbound_bandwith = $object.bandwidthIn)
+        #set($bdos_profile_object.bdos_profile_outbound_bandwith = $object.bandwidthOut)
+        #log('info',"BDOS profile found $bdos_profile_object")
+    #else
+        $bdos_profile_object.profile_enabled = false
+	#end
+#end
+
+#macro(pull_dns_profile_from_device, $dns_profile_name, $dns_profile_object)
+    #set($object_to_read = $defensePro.newBean('RsDnsProtProfileEntry'))
+    #set($object_to_read.name = $dns_profile_name) 
+	#log('info'," object_to_read.name = $object_to_read.name")  
+    #log('info',"DNS profile $dns_profile_name")	
+    #set($object =  $defensePro.read($object_to_read))    
+    #if(!$object.isEmpty())
+		#log('info',"not empty")	
+		##foreach($object in $objects)
+			#log('info',"DNS profile found $dns_profile_name")
+            #set($dns_profile_object.exp_qps = $object.expectedQps)
+            #set($dns_profile_object.max_qps = $object.maxAllowQps)
+			#log('info',"DNS profile found $dns_profile_object")
+		##	#break
+		##end
+    #else
+		#log('info',"DNS profile wasn't found $dns_profile_name")
+        $dns_profile_object.profile_enabled = false
+	#end
+#end
+
+#macro(pull_syn_profile_from_device, $syn_profile_name, $syn_protection_type)
+    #set($syn_protection_type = [])
+    #set($object_to_read = $defensePro.newBean('RsIDSSynProfilesEntry'))
+    #set($object_to_read.name = $syn_profile_name)    
+    #set($objects =  $defensePro.readAll($object_to_read))
+    #if(!$objects.isEmpty())
+		#foreach($object in $objects)
+            #set($syn_to_add = {'protection_type' : $object.serviceName})
+            #set($add_status = ${syn_protection_type.add($syn_to_add)})
+		#end
+        #log('info',"Found SYN profile $syn_profile_name with type $syn_protection_type")
+	#end
+#end
+
+#macro(pull_oos_profile_from_device, $oos_profile_name, $oos_profile_object)
+    #set($object_to_read = $defensePro.newBean('RsStatefulProfileEntry'))
+    #set($object_to_read.name = $oos_profile_name)    
+    #set($object =  $defensePro.read($object_to_read))  
+    #if(!$object.isEmpty())
+		##set($oos_profile_object.bdos_profile_inbound_bandwith = $object.bandwidthIn)
+        ##set($oos_profile_object.bdos_profile_outbound_bandwith = $object.bandwidthOut)
+        #log('info',"Out Of State profile found $oos_profile_object")
+    #else
+        $oos_profile_object.profile_enabled = false
+	#end
+#end
+
+#macro(pull_cracking_profile_from_device, $cracking_profile_name, $cracking_protection_type)
+    #set($cracking_protection_type = [])
+    #set($object_to_read = $defensePro.newBean('RsIDSServProtProfilesEntry'))
+    #set($object_to_read.name = $cracking_profile_name)    
+    #set($objects =  $defensePro.readAll($object_to_read))
+    #if(!$objects.isEmpty())
+		#foreach($object in $objects)
+            #set($cracking_to_add = {'protection_type' : $object.serviceName})
+            #set($add_status = ${cracking_protection_type.add($cracking_to_add)})
+		#end
+        #log('info',"Found cracking profile $cracking_profile_name with type $cracking_protection_type")
+	#end
+#end
+
+## ---------------- Delete objects section ----------------
+
+#macro(delete_network_ip_mask, $network_name)
+    #if($network_name != 'any')
+        #log('info',"Delete network $network_name")
+        #set($network_ip_mask = $defensePro.newBean('RsBWMNetworkEntry'))
+        #set($network_ip_mask.name = $network_name)
+        #set($objects =  $defensePro.readAll($network_ip_mask))
+        #if(!$objects.isEmpty())
+            #foreach($object in $objects)
+                #log('info',"Network $object.name by sub index $object.subIndex to be deleted.")
+                classes modify network del $object.name $object.subIndex
+            #end
+        #else
+            #log('info',"Network $network_name not found.")
+        #end
+    #end
+#end
+
+#macro(delete_vlan_tag_group, $vlan_tag_group_name)
+    #set($vlan_tag_group = $defensePro.newBean('RsBWMVLANTagGroupEntry'))
+    #set($vlan_tag_group.name = $vlan_tag_group_name)
+    #set($objects =  $defensePro.readAll($vlan_tag_group))
+	#if(!$objects.isEmpty())
+		#foreach($object in $objects)
+            #log('info',"Vlan Tag Group $object.name with VLAN Tag $object.vLANTag VLAN Tag Range From $object.vLANTagFrom VLAN Tag Range To $object.vLANTagTo to be deleted.")
+		    classes modify vlan-tag-groups del $object.name $object.vLANTag $object.vLANTagFrom $object.vLANTagTo
+		#end
+    #else
+    	#log('info',"Vlan Tag Group $vlan_tag_group_name was not found.")
+    #end
+#end
+
+#macro(delete_physical_port_group, $physical_port_group_name)
+    #set($physical_port_group = $defensePro.newBean('RsBWMPhysicalPortGroupEntry'))
+    #set($physical_port_group.name = $physical_port_group_name)
+    #set($objects =  $defensePro.readAll($physical_port_group))
+	#if(!$objects.isEmpty())
+		#foreach($object in $objects)
+            #log('info',"Physical Port Group $object.name with physical port $object.port to be deleted.")
+		    classes modify physical-port-groups del $object.name $object.port
+		#end
+    #else
+    	#log('info',"Physical Port Group $physical_port_group_name was not found.")
+    #end
+#end
+
+#macro(delete_syn_profile, $syn_profile_name)
+	#log('info',"Delete SYN profile $syn_profile_name .")
+    #set($syn_profile = $defensePro.newBean('RsIDSSynProfilesEntry'))
+    #set($syn_profile.name = $syn_profile_name)
+    #set($objects =  $defensePro.readAll($syn_profile))
+    	#if(!$objects.isEmpty())
+		#foreach($object in $objects)
+            #log('info',"SYN profile $syn_profile_name with protection type $object.serviceName to be deleted.")
+		    hidden profile del $syn_profile_name $object.serviceName
+		#end
+    #else
+    	#log('info',"SYN profile $syn_profile_name was not found.")
+    #end
+#end
+
+#macro(delete_bdos_profile, $bdos_profile_name)
+    #log('info',"Delete BDoS profile $bdos_profile_name .")
+    dp behavioral-DoS global advanced profile-configuration \
+    del $bdos_profile_name
+#end
+
+#macro(delete_dns_profile, $dns_profile_name)
+    #log('info',"Delete DNS profile $dns_profile_name .")
+    dp dns-protection global advanced profiles del $dns_profile_name
+#end
+
+#macro(delete_oos_profile, $oos_profile_name)
+    #log('info',"Delete Out Of State profile $oos_profile_name .")
+    dp out-of-state profiles del $oos_profile_name
+#end
+
+#macro(delete_cracking_profile, $cracking_profile_name, $policy_name)
+	#log('info',"Delete Protected Server $cracking_profile_name .")
+	#set($protected_server_name = $policy_name + '_server_crack')
+	dp server-protection protected-servers set $protected_server_name -vlan ""
+	dp server-protection protected-servers del $protected_server_name
+    #log('info',"Delete Cracking profile $cracking_profile_name .")
+	#set($cracking_profile = $defensePro.newBean('RsIDSServProtProfilesEntry'))
+    #set($cracking_profile.name = $cracking_profile_name)
+    #set($objects =  $defensePro.readAll($cracking_profile))
+    	#if(!$objects.isEmpty())
+		#foreach($object in $objects)
+            #log('info',"Cracking profile $cracking_profile_name with protection type $object.serviceName to be deleted.")
+			#log('info',"hidden cracking-protection profiles del $cracking_profile_name ""$object.serviceName"" ")
+		    hidden cracking-protection profiles del $cracking_profile_name "$object.serviceName"
+		#end
+    #else
+    	#log('info',"Cracking profile $cracking_profile_name was not found.")
+    #end
+#end
+
+#macro(verify_update_policy_finished)
+	#savereplies(false)
+    	#set($expect.timeout = 30)
+    	classes modify mac-group create dummy eeeeeeeeeeee
+		#expectCase()
+			#case('Created successfully')
+				#log('info', "Updated Policy finished successfully")
+				classes modify mac-group del dummy eeeeeeeeeeee
+    		#end
+    		#case('You cannot change the configuration now. The Update Policies action is in progress. Try again later.')
+            	classes modify mac-group create dummy eeeeeeeeeeee
+                $expect.sleep(3)
+            	#expectContinue()
+        	#end
+    	#end
+		#expect('Deleted successfully')
+	#end
+#end
+		

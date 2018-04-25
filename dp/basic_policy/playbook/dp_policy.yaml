@@ -1,0 +1,84 @@
+- hosts: localhost 
+  vars_files:
+    - vars/vdirect_params.yml
+    - vars/policy_params.yml
+  tasks:
+  - name: Uploading the DP version configuration template to vDirect
+    tags:
+    - upload
+    vdirect_file:
+      vdirect_ip: "{{ vdirect_ip }}"
+      vdirect_user: "{{ vdirect_user }}"
+      vdirect_password: "{{ vdirect_password }}"
+      vdirect_validate_certs: "{{ vdirect_validate_certs }}"
+      file_name: "{{ version_configuration_template_file }}"
+  - name: Uploading the type definitions configuration template to vDirect
+    tags:
+    - upload
+    vdirect_file:
+      vdirect_ip: "{{ vdirect_ip }}"
+      vdirect_user: "{{ vdirect_user }}"
+      vdirect_password: "{{ vdirect_password }}"
+      vdirect_validate_certs: "{{ vdirect_validate_certs }}"
+      file_name: "{{ typedefs_configuration_template_file }}"
+  - name: Uploading the DP objects CRUD configuration template to vDirect
+    tags:
+    - upload
+    vdirect_file:
+      vdirect_ip: "{{ vdirect_ip }}"
+      vdirect_user: "{{ vdirect_user }}"
+      vdirect_password: "{{ vdirect_password }}"
+      vdirect_validate_certs: "{{ vdirect_validate_certs }}"
+      file_name: "{{ crud_configuration_template_file }}"
+  - name: Uploading the policy creation configuration template to vDirect
+    tags:
+    - upload
+    vdirect_file:
+      vdirect_ip: "{{ vdirect_ip }}"
+      vdirect_user: "{{ vdirect_user }}"
+      vdirect_password: "{{ vdirect_password }}"
+      vdirect_validate_certs: "{{ vdirect_validate_certs }}"
+      file_name: "{{ create_configuration_template_file }}"
+  - name: Uploading the policy deletion configuration template to vDirect
+    tags:
+    - upload
+    vdirect_file:
+      vdirect_ip: "{{ vdirect_ip }}"
+      vdirect_user: "{{ vdirect_user }}"
+      vdirect_password: "{{ vdirect_password }}"
+      vdirect_validate_certs: "{{ vdirect_validate_certs }}"
+      file_name: "{{ delete_configuration_template_file }}"
+  - name: Run DP policy creation configuration template
+    tags:
+    - apply
+    vdirect_runnable:
+      vdirect_ip: "{{ vdirect_ip }}"
+      vdirect_user: "{{ vdirect_user }}"
+      vdirect_password: "{{ vdirect_password }}"
+      vdirect_validate_certs: "{{ vdirect_validate_certs }}"
+      runnable_type: ConfigurationTemplate
+      runnable_name: "{{ create_configuration_template }}"
+      parameters: {'defensePro':[{'type':'DefensePro','name': "{{ defensePro }}"}],
+	    'policy_name':"{{ policy_name }}",
+		'source_network':"{{ source_network }}",
+		'destination_network':"{{ destination_network }}",
+		
+		'vlan_tag_groups':"{{ vlan_tag_groups }}",
+		'bdos_profile':"{{ bdos_profile }}",
+		'syn_protection_types':"{{ syn_protection_types }}",
+		'dns_profile':"{{ dns_profile }}",
+		'oos_profile':"{{ oos_profile }}",
+		'cracking_protection_types':"{{ cracking_protection_types }}",
+		'policy_action':"{{ policy_action }}"}
+  - name: Run DP policy deletion configuration template
+    tags:
+    - remove
+    vdirect_runnable:
+      vdirect_ip: "{{ vdirect_ip }}"
+      vdirect_user: "{{ vdirect_user }}"
+      vdirect_password: "{{ vdirect_password }}"
+      vdirect_validate_certs: "{{ vdirect_validate_certs }}"
+      runnable_type: ConfigurationTemplate
+      runnable_name: "{{ delete_configuration_template }}"
+      parameters: {'defensePro':[{'type':'DefensePro','name': "{{ defensePro }}"}],
+	    'policy_name':"{{ policy_name }}"}

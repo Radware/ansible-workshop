@@ -1,0 +1,61 @@
+#parse("dp_typedefs.vm")
+#parse("dp_crud.vm")
+
+#param($policy_name, 'string', 'in')
+
+#set($source_network_name = $policy_name + '_s')
+#set($destination_network_name = $policy_name + '_d')
+#set($vlan_tag_group_name = $policy_name)
+#set($bdos_profile_name = $policy_name)
+#set($syn_profile_name = $policy_name)
+#set($dns_profile_name = $policy_name)
+#set($oos_profile_name = $policy_name)
+#set($cracking_profile_name = $policy_name)
+#set($policy_action = "delete")
+
+#device($defensePro, 'type=defensePro', 'version=7.42.02')
+
+##Make sure Policy exists and is empty
+#log('info', "Resetting policy $policy_name")
+#create_or_update_empty_policy($policy_name,$policy_action)
+
+##We can delete the policy
+#log('info', "Deleting policy $policy_name")
+#delete_policy($policy_name)
+
+$defensePro.apply()
+#verify_update_policy_finished()
+
+##Deleteing all profiles
+#delete_syn_profile($syn_profile_name)
+#delete_bdos_profile($bdos_profile_name)
+#delete_dns_profile($dns_profile_name)
+#delete_oos_profile($oos_profile_name)
+#delete_cracking_profile($cracking_profile_name,$policy_name)
+#delete_network_ip_mask($source_network_name)
+#delete_network_ip_mask($destination_network_name)
+#delete_vlan_tag_group($vlan_tag_group_name)
+
+$defensePro.apply()
+#verify_update_policy_finished()
+
+##Verify the objects are removed
+#set($error_names = [])
+#verify_object_removed($source_network_name, 'RsBWMNetworkEntry', $error_names)
+#verify_object_removed($destination_network_name, 'RsBWMNetworkEntry', $error_names)
+#verify_object_removed($vlan_tag_group_name, 'RsBWMVLANTagGroupEntry', $error_names)
+#verify_object_removed($syn_profile_name, 'RsIDSSynProfilesEntry', $error_names)
+##There is a BUG in DP in which although the BDoS,DNS and Cracking profile were deleted they are still there untill we do update-policy
+#verify_object_removed($bdos_profile_name, 'RsNetFloodProfileEntry', $error_names)
+#verify_object_removed($dns_profile_name,'RsDnsProtProfileEntry', $error_names)
+#verify_object_removed($oos_profile_name,'RsStatefulProfileEntry', $error_names)
+#verify_object_removed($cracking_profile_name,'RsIDSServProtProfilesEntry', $error_names)
+
+#if(!$error_names.isEmpty())
+    #set($error_message = $error_names.toString())
+    #set($error_message = "Objects " + $error_names + " still exist on device !!!")
+    #log('error',$error_message)
+    #error($error_message) 
+#else
+	#log('info',"Policy $policy_name and related objects were deleted")
+#end
