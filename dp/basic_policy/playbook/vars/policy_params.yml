@@ -17,7 +17,7 @@ source_network:
       mask: 255.255.255.0
   ip_range_list:
     - from_ip: <IP>
-      to_ip: 192.168.10.20
+      to_ip: <IP>
 
 destination_network:
   ip_mask_list:
@@ -25,7 +25,7 @@ destination_network:
       mask: 255.255.255.0
   ip_range_list:
     - from_ip: <IP>
-      to_ip: 192.168.20.20
+      to_ip: <IP>
   
 vlan_tag_groups:
   vlan_discrete_tags:
