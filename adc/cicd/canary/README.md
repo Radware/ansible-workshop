@@ -1,12 +1,12 @@
 # Radware ansible workshop example for CICD Canary
 
 **Important notes:**
-	*  All Radware ansible modules require installation of vdirect-client.
-	Installing it is as simple as running the command: sudo pip install vdirect-client.
-    See vdirect_client parameters description [here](https://pypi.python.org/pypi/vdirect-client),
-	you may want to modify their defaults while using this playbook. 
-	*  Playbook parameters files should be reviewed and modified prior to using the playbook.
-	See parameters files description below.
+*  All Radware ansible modules require installation of vdirect-client.
+Installing it is as simple as running the command: sudo pip install vdirect-client.
+See vdirect_client parameters description [here](https://pypi.python.org/pypi/vdirect-client),
+you may want to modify their defaults while using this playbook. 
+*  Playbook parameters files should be reviewed and modified prior to using the playbook.
+See parameters files description below.
 
 
 ## Installation

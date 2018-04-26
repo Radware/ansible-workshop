@@ -1,24 +1,24 @@
 # Radware ansible workshop example for DefensePro policy creation
 
 **Important notes:**
-	*  All Radware ansible modules require installation of vdirect-client.
-	Installing it is as simple as running the command: sudo pip install vdirect-client.
-    See vdirect_client parameters description [here](https://pypi.python.org/pypi/vdirect-client),
-	you may want to modify their defaults while using this playbook. 
-	*  Playbook parameters files should be reviewed and modified prior to using the playbook.
-	See parameters files description below.
+*  All Radware ansible modules require installation of vdirect-client.
+Installing it is as simple as running the command: sudo pip install vdirect-client.
+See vdirect_client parameters description [here](https://pypi.python.org/pypi/vdirect-client),
+you may want to modify their defaults while using this playbook.
+*  Playbook parameters files should be reviewed and modified prior to using the playbook.
+See parameters files description below.
 
 
 ## General
-This example contains a playbook folder and a template folder.
-
+This example contains this **README.md** file, **playbook** folder and **template** folder.
 
 **The playbook folder contains:**
-1.  dp_policy.yaml playbook file. The playbook uses parameters files from the vars sub folder.
-2.  vars sub folder with three playbook parameters files
+1.  **dp_policy.yaml** playbook file. The playbook uses parameters files from the vars sub folder.
+2.  **vars** sub folder with three playbook parameters files
 	*  **vdirect_params.yml** - contains vDirect parameters.
-	*  **policy_params.yml** - contains vDirect configuration templates file names, vDirect template instance name,
-	   DefensePro device name and all policy parameters needed.
+	*  **policy_params.yml** - contains vDirect configuration templates file names,
+		vDirect template instance name, DefensePro device name
+		and all policy parameters needed.
 
 
 **The template folder contains vDirect configuration template source files:**
@@ -46,3 +46,13 @@ This example contains a playbook folder and a template folder.
 *  You can use the playbook with *upload* tag to just upload the configuration templates.
 *  You can use the playbook with *apply* tag to create the policy.
 *  You can use the playbook with *remove* tag to remove the policy.
+
+**Example:**
+To upload the templates and apply the policy, run the following command which uses **upload** and **apply** tags:
+```
+ansible-playbook dp_policy.yaml --tags upload, apply
+```
+To remove the policy, run the following command which uses **remove** tag:
+```
+ansible-playbook dp_policy.yaml --tags remove
+```
